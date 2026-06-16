@@ -3,10 +3,10 @@
 #include <iostream>
 #include <algorithm>
 
-#include "../kernels/sum_naive.cuh" 
-#include "../kernels/sum_shuffle.cuh" 
-#include "../kernels/max_reduce.cuh" 
-#include "../kernels/softmax_two_pass.cuh" 
+#include "../../kernels/sum_naive.cuh" 
+#include "../../kernels/sum_shuffle.cuh" 
+#include "../../kernels/max_reduce.cuh" 
+#include "../../kernels/softmax_two_pass.cuh" 
 
 #define SIZE 32768
 #define BLOCKSIZE 128
