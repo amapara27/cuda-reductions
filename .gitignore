@@ -1,0 +1,8 @@
+.vscode
+
+*.pdb
+*.exe
+*.exp
+*.lib
+
+/scripts/runner
