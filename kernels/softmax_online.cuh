@@ -2,11 +2,8 @@
 #include <device_launch_parameters.h>
 #include <iostream>
 
-#define SIZE 32768
-#define BLOCKSIZE 128
-
 // one pass softmax kernel for 32 elements to start
-__global__ void softmax(float *in, float *out_m, float *out_s) {
+__global__ void softmax(float *in, float *out) {
     // each thread grabs an element
     int tid = threadIdx.x;
     float element = in[tid];
@@ -27,8 +24,9 @@ __global__ void softmax(float *in, float *out_m, float *out_s) {
         m = m_new;
     }
 
-    if (tid == 0) {
-        *out_m = m;
-        *out_s = s;
-    }
+    // only thread 0 has the correct max and sum, must broadcast them to all within warp
+    m = __shfl_sync(0xffffffff, m, 0, 32);
+    s = __shfl_sync(0xffffffff, s, 0, 32);
+
+    out[tid] = expf(element - m)  / s;
 }

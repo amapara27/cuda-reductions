@@ -3,26 +3,17 @@
 #include <iostream>
 #include <algorithm>
 
-#include "../../kernels/sum_naive.cuh" 
-#include "../../kernels/sum_shuffle.cuh" 
-#include "../../kernels/max_reduce.cuh" 
-#include "../../kernels/softmax_two_pass.cuh" 
+#include "../../kernels/softmax_online.cuh"
 
-#define SIZE 32768
-#define BLOCKSIZE 128
+#define SIZE 32
+#define BLOCKSIZE 32
 
 // array intialization
-void arr_init(float *arr_in, float *arr_partial_max, float *full_max, float *arr_exp, float *arr_partial_sum, float *full_sum, float * arr_out, int size) {
+void arr_init(float *arr_in, float * arr_out, int size) {
     for (int i = 0; i < size; ++i) {
         arr_in[i] = (float)(rand() % 100);
-        arr_partial_max[i] = 0;
-        arr_exp[i] = 0;
-        arr_partial_sum[i] = 0;
         arr_out[i] = 0;
     }
-
-    *full_max = 0;
-    *full_sum = 0;
 }
 
 // sum checker
@@ -96,5 +87,50 @@ void softmax_check(float *cpu_in, float *gpu_sm) {
 }
 
 int main() {
+    int size = SIZE;
+
+    // mem sizes
+    size_t in_bytes = size * sizeof(float);
+    size_t out_bytes = size * sizeof(float);
+
+    // host memory allocation
+    float *h_in, *h_out;
+
+    h_in = (float*)malloc(in_bytes);
+    h_out = (float*)malloc(out_bytes);
+
+    // array initialization
+    arr_init(h_in, h_out, size);
+
+    // device memory allocation
+    float *d_in, *d_out;
+
+    cudaMalloc(&d_in, in_bytes);
+    cudaMalloc(&d_out, out_bytes);
+
+    // copy data to GPU
+    cudaMemcpy(d_in, h_in, in_bytes, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_out, h_out, out_bytes, cudaMemcpyHostToDevice);
+
+    // grid and block dims
+    dim3 gridDim(size / BLOCKSIZE, 1, 1);
+    dim3 blockDim(BLOCKSIZE);
+
+    // launch partial max kernel and fetch results
+    softmax<<<gridDim, blockDim>>>(d_in, d_out);
+    cudaDeviceSynchronize();
+
+    cudaMemcpy(h_out, d_out, out_bytes, cudaMemcpyDeviceToHost);
+
+    std::cout << "Idx 0 " << *h_out << std::endl;
+
+    softmax_check(h_in, h_out);
+
+    // free memory
+    free(h_in);
+    free(h_out);
+    cudaFree(d_in);
+    cudaFree(d_out);
+
     return 0;
 }
