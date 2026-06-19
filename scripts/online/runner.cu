@@ -2,11 +2,12 @@
 #include <device_launch_parameters.h>
 #include <iostream>
 #include <algorithm>
+#include <cfloat>
 
 #include "../../kernels/softmax_online.cuh"
 
-#define SIZE 32
-#define BLOCKSIZE 32
+#define SIZE 32768
+#define BLOCKSIZE 128
 
 // array intialization
 void arr_init(float *arr_in, float * arr_out, int size) {
@@ -112,8 +113,8 @@ int main() {
     cudaMemcpy(d_in, h_in, in_bytes, cudaMemcpyHostToDevice);
     cudaMemcpy(d_out, h_out, out_bytes, cudaMemcpyHostToDevice);
 
-    // grid and block dims
-    dim3 gridDim(size / BLOCKSIZE, 1, 1);
+    // grid and block dims (one block does entire arr)
+    dim3 gridDim(1, 1, 1);
     dim3 blockDim(BLOCKSIZE);
 
     // launch partial max kernel and fetch results
@@ -121,9 +122,6 @@ int main() {
     cudaDeviceSynchronize();
 
     cudaMemcpy(h_out, d_out, out_bytes, cudaMemcpyDeviceToHost);
-
-    std::cout << "Idx 0 " << *h_out << std::endl;
-
     softmax_check(h_in, h_out);
 
     // free memory
