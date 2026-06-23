@@ -7,7 +7,7 @@
 #include "../../kernels/softmax_online.cuh"
 
 #define SIZE 32768
-#define BLOCKSIZE 128
+#define BLOCKSIZE 1024
 
 // array intialization
 void arr_init(float *arr_in, float * arr_out, int size) {

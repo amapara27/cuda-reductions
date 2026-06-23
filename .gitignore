@@ -4,5 +4,6 @@
 *.exe
 *.exp
 *.lib
+*.ncu-rep
 
 /scripts/runner

@@ -4,7 +4,7 @@
 #include <cfloat>
 
 #define SIZE 32768
-#define BLOCKSIZE 128
+#define BLOCKSIZE 1024
 
 // one pass softmax kernel
 __global__ void softmax(float *in, float *out) {
